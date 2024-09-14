@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Root Page</title>
+    <link rel="stylesheet" href="./css/style.css" />
+
+    <!-- script jquery -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+      integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <!-- script socket io -->
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      //same server for BE - FE
+      const clientIO = io.connect();
+
+      // .on() => รอรับสัญญาณ
+      // .emit() => ส่งสัญญาณ
+      clientIO.on("order", (data) => {
+        renderOrder(data);
+      });
+
+      clientIO.on("confirm_order", (data) => {
+        $(`.btn-confirm[data-id=${data.id}]`).attr("disabled", true);
+        $(`.btn-confirm[data-id=${data.id}]`).text("Confirm");
+
+        $(`.order-status[data-id=${data.id}]`).text("1");
+
+        //update order status Render
+      });
+
+      // ready function
+      //document ready
+      $(function () {
+        getOrder();
+
+        $("#order-list").on("click", ".btn-confirm", async (e) => {
+          const id = $(e.target).data("id");
+
+          await fetch("/order/confirm_order", {
+            headers: {
+              "content-type": "application/json",
+            },
+            method: "post",
+            body: JSON.stringify({ id }),
+          });
+        });
+
+        $("#btn-submit").on("click", async () => {
+          const product = $("#product").val();
+          const amount = $("#amount").val();
+          const post_data = { product, amount };
+
+          //ajax commamd
+          //$.post()
+          //$.get()
+          $.ajax({
+            headers: {
+              "content-type": "application/json",
+            },
+            url: "order/add_order",
+            type: "post",
+            data: JSON.stringify(post_data),
+            dataType: "json",
+            success: (response) => {
+            },
+          });
+
+          //fetch()
+          // const order = await fetch("order/add_order", {
+          //   headers: {
+          //     "content-type": "application/json",
+          //   },
+          //   method: "post",
+          //   body: JSON.stringify(post_data),
+          // })
+          //   .then((res) => res.json())
+          //   .catch((err) => {
+          //     throw err;
+          //   });
+          // //reder order-list
+          // if (!order) return;
+          //axios()
+        });
+      });
+
+      async function getOrder() {
+        const data = await fetch("/order/order_list");
+        const orders = await data.json();
+
+        if (!orders) return;
+
+        orders.forEach((order) => {
+          renderOrder(order);
+        });
+      }
+
+      function renderOrder(data) {
+        const { id, order_id, product, amount, created, order_status } = data;
+        const statusCondition = order_status ? "Confirm" : "Waiting Confirm";
+        const btnDisable = order_status ? "disabled" : "";
+        $("#order-list").append(`
+                <div>
+                  id:${id},oder_id:${order_id},product:${product},amount:${amount},created:${created},order_status:<span class="order-status" data-id="${id}">${order_status}</span>
+                  <button type="button" class="btn-confirm" data-id="${id}" ${btnDisable}>${statusCondition}</button>
+                </div>
+              `);
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Welcome to Realtime app learnning</h1>
+
+    <form action="">
+      <label for="product">Product</label>
+      <input type="text" name="product" id="product" value="pen" />
+
+      <label for="amount">Amount</label>
+      <input type="number" name="amount" value="20" id="amount" />
+
+      <button type="button" id="btn-submit">Submit</button>
+    </form>
+
+    <div id="order-list"></div>
+  </body>
+</html>
