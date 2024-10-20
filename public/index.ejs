@@ -60,7 +60,8 @@
         $("#btn-submit").on("click", async () => {
           const product = $("#product").val();
           const amount = $("#amount").val();
-          const post_data = { product, amount };
+          const unit_price = $("#unit_price").val();
+          const post_data = { product, unit_price, amount };
 
           //ajax commamd
           //$.post()
@@ -73,8 +74,7 @@
             type: "post",
             data: JSON.stringify(post_data),
             dataType: "json",
-            success: (response) => {
-            },
+            success: (response) => {},
           });
 
           //fetch()
@@ -107,12 +107,13 @@
       }
 
       function renderOrder(data) {
-        const { id, order_id, product, amount, created, order_status } = data;
+        const { id, order_id, product, amount, created, order_status , unit_price , total } = data;
         const statusCondition = order_status ? "Confirm" : "Waiting Confirm";
         const btnDisable = order_status ? "disabled" : "";
         $("#order-list").append(`
                 <div>
-                  id:${id},oder_id:${order_id},product:${product},amount:${amount},created:${created},order_status:<span class="order-status" data-id="${id}">${order_status}</span>
+                  id:${id},order_id:${order_id},product:${product},amount:${amount},unit price:${unit_price},total:${total},created:${created},order_status:<span class="order-status" data-id="${id}">${order_status}</span>
+                  <button type="button" class="btn-payment">Payment</button>
                   <button type="button" class="btn-confirm" data-id="${id}" ${btnDisable}>${statusCondition}</button>
                 </div>
               `);
@@ -125,6 +126,15 @@
     <form action="">
       <label for="product">Product</label>
       <input type="text" name="product" id="product" value="pen" />
+
+      <label for="unit_price">Unit Price</label>
+      <input
+        type="number"
+        name="unit_price"
+        placeholder="unit price"
+        id="unit_price"
+        value="5"
+      />
 
       <label for="amount">Amount</label>
       <input type="number" name="amount" value="20" id="amount" />
