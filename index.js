@@ -29,7 +29,7 @@ const io = new Server(app_server);
 app.io = io;
 
 io.on("connection", (socket) => {
-  console.log(socket.id + "is connected");
+  console.log(socket.id + " is connected");
 
   socket.on("disconnect", () => {
     console.log(socket.id + "is disconnected");

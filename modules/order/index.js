@@ -48,18 +48,20 @@ Router.get("/order_list", async (req, res) => {
 Router.post("/add_order", async (req, res) => {
   const t = await seq.transaction();
   try {
-    const { product, amount } = req.body;
+    const { product, unit_price, amount } = req.body;
 
     const [insertResult] = await seq.query(
       `
-          INSERT INTO tb_order (order_id, product, amount)
-          VALUES (:order_idx, :productx, :amountx);
+          INSERT INTO tb_order (order_id, product, amount , unit_price , total)
+          VALUES (:order_idx, :productx, :amountx , :unit_pricex ,:totalx);
         `,
       {
         replacements: {
           order_idx: uuidv4(),
           productx: product,
           amountx: amount,
+          unit_pricex: unit_price,
+          totalx: amount * unit_price,
         },
         transaction: t,
         type: QueryTypes.INSERT,
