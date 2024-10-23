@@ -21,6 +21,9 @@
       crossorigin="anonymous"
     ></script>
 
+    <!-- script omise -->
+    <script type="text/javascript" src="https://cdn.omise.co/omise.js"></script>
+
     <script>
       //same server for BE - FE
       const clientIO = io.connect();
@@ -34,9 +37,7 @@
       clientIO.on("confirm_order", (data) => {
         $(`.btn-confirm[data-id=${data.id}]`).attr("disabled", true);
         $(`.btn-confirm[data-id=${data.id}]`).text("Confirm");
-
         $(`.order-status[data-id=${data.id}]`).text("1");
-
         //update order status Render
       });
 
@@ -89,9 +90,19 @@
           //   .catch((err) => {
           //     throw err;
           //   });
-          // //reder order-list
+          // //render order-list
           // if (!order) return;
           //axios()
+        });
+
+        $("#order-list").on("click", ".btn-payment", async (e) => {
+          const order_id = $(e.target).data("order_id");
+          const total = $(e.target).data("total");
+
+          //omise
+          OmiseCard.configure({
+            publicKey: "OMISE_PUBLIC_KEY",
+          });
         });
       });
 
@@ -107,13 +118,22 @@
       }
 
       function renderOrder(data) {
-        const { id, order_id, product, amount, created, order_status , unit_price , total } = data;
+        const {
+          id,
+          order_id,
+          product,
+          amount,
+          created,
+          order_status,
+          unit_price,
+          total,
+        } = data;
         const statusCondition = order_status ? "Confirm" : "Waiting Confirm";
         const btnDisable = order_status ? "disabled" : "";
         $("#order-list").append(`
                 <div>
                   id:${id},order_id:${order_id},product:${product},amount:${amount},unit price:${unit_price},total:${total},created:${created},order_status:<span class="order-status" data-id="${id}">${order_status}</span>
-                  <button type="button" class="btn-payment">Payment</button>
+                  <button type="button" class="btn-payment" data-order_id="${order_id}" data-total="${total}">Payment</button>
                   <button type="button" class="btn-confirm" data-id="${id}" ${btnDisable}>${statusCondition}</button>
                 </div>
               `);
@@ -121,7 +141,7 @@
     </script>
   </head>
   <body>
-    <h1>Welcome to Realtime app learnning</h1>
+    <h1>Welcome to Realtime app learning</h1>
 
     <form action="">
       <label for="product">Product</label>
