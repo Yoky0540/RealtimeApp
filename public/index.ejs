@@ -27,6 +27,10 @@
     <script>
       //same server for BE - FE
       const clientIO = io.connect();
+      const omise_public = "<%= process.env.OMISE_P_KEY %>";
+      const omise_secret = "<%= process.env.OMISE_S_KEY %>";
+      const host_name = "<%= process.env.HOST_NAME %>";
+      const port = "<%= process.env.PORT %>";
 
       // .on() => รอรับสัญญาณ
       // .emit() => ส่งสัญญาณ
@@ -64,7 +68,7 @@
           const unit_price = $("#unit_price").val();
           const post_data = { product, unit_price, amount };
 
-          //ajax commamd
+          //ajax command
           //$.post()
           //$.get()
           $.ajax({
@@ -99,12 +103,59 @@
           const order_id = $(e.target).data("order_id");
           const total = $(e.target).data("total");
 
+          const omise_init_payload = {
+            amount: total * 100,
+            currency: "THB",
+            locale:"TH",
+            frameLabel:"โชคดีมีชัย"
+          };
+
           //omise
           OmiseCard.configure({
-            publicKey: "OMISE_PUBLIC_KEY",
+            publicKey: omise_public,
+          });
+          OmiseCard.open({
+            ...omise_init_payload,
+            defaultPaymentMethod: "promptpay",
+            otherPaymentMethods:
+              "truemoney,alipay,credit_card,mobile_banking_kbank,mobile_banking_ktb,mobile_banking_scb,mobile_banking_bbl,mobile_banking_bay",
+            onCreateTokenSuccess: (nonce) => {
+              /**nonce is return generate token,source by 
+                -tokn is token
+                -src is source
+              **/
+              console.log("nonce:", nonce);
+              chargePayment({
+                ...omise_init_payload,
+                metadata: {
+                  id: 100,
+                  order_id: order_id,
+                  name: "test name",
+                },
+                return_url: `http://${host_name}:${port}/complete?order_id=${order_id}`,
+                nonce: nonce,
+              });
+            },
           });
         });
       });
+
+      const chargePayment = async (postData) => {
+        const data = await fetch("/api/charge", {
+          headers: {
+            "content-type": "application/json",
+          },
+          method: "POST",
+          body: JSON.stringify(postData),
+        })
+          .then((res) => res.json())
+          .catch((err) => {
+            throw err;
+          });
+
+        console.log("data:", data);
+        // return data;
+      };
 
       async function getOrder() {
         const data = await fetch("/order/order_list");
