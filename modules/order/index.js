@@ -1,10 +1,12 @@
+require("dotenv").config();
+const { MYSQL_TABLE_ORDER } = process.env;
 const express = require("express");
 const Router = express.Router();
 const { v4: uuidv4 } = require("uuid");
 const { seq, QueryTypes } = require("../../config/db");
 
 Router.post("/confirm_order", async (req, res) => {
-  const updateOrder = `UPDATE tb_order SET order_status = 1 WHERE id = :id`;
+  const updateOrder = `UPDATE ${MYSQL_TABLE_ORDER} SET order_status = 1 WHERE id = :id`;
   const t = await seq.transaction();
   try {
     const { id } = req.body;
@@ -18,7 +20,7 @@ Router.post("/confirm_order", async (req, res) => {
 
     // Fetch the updated data using the id from the request
     const [fetchData] = await seq.query(
-      `SELECT * FROM tb_order WHERE id = :id`,
+      `SELECT * FROM ${MYSQL_TABLE_ORDER} WHERE id = :id`,
       {
         replacements: { id },
         transaction: t,
@@ -37,7 +39,7 @@ Router.post("/confirm_order", async (req, res) => {
 
 Router.get("/order_list", async (req, res) => {
   try {
-    const orderAll = "SELECT * FROM tb_order ORDER BY id ASC ";
+    const orderAll = `SELECT * FROM ${MYSQL_TABLE_ORDER} ORDER BY id ASC `;
     const data = await seq.query(orderAll, { type: QueryTypes.SELECT });
     res.json(data);
   } catch (err) {
@@ -52,7 +54,7 @@ Router.post("/add_order", async (req, res) => {
 
     const [insertResult] = await seq.query(
       `
-          INSERT INTO tb_order (order_id, product, amount , unit_price , total)
+          INSERT INTO ${MYSQL_TABLE_ORDER} (order_id, product, amount , unit_price , total)
           VALUES (:order_idx, :productx, :amountx , :unit_pricex ,:totalx);
         `,
       {
@@ -70,7 +72,7 @@ Router.post("/add_order", async (req, res) => {
 
     const [fetchData] = await seq.query(
       `
-          SELECT * FROM tb_order WHERE id = :insertId;
+          SELECT * FROM ${MYSQL_TABLE_ORDER} WHERE id = :insertId;
         `,
       {
         replacements: {
